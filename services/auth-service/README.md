@@ -29,8 +29,10 @@ Para executar com Docker Compose, copie `.env.example` para `.env` na raiz do re
 
 ```powershell
 $bytes = New-Object byte[] 32
-[Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($bytes)
 $env:AUTH_JWT_SECRET_BASE64 = [Convert]::ToBase64String($bytes)
+$rng.Dispose()
 ```
 
 Configure as variáveis do banco conforme seu PostgreSQL e mantenha a chave fora do repositório. A chave precisa ser a mesma em todas as réplicas do serviço e no serviço de chat que validar os tokens. Não reutilize uma chave de desenvolvimento em produção.
@@ -94,6 +96,18 @@ Retorna `200 OK` com `accessToken`, `tokenType`, `expiresIn` e os dados público
 `GET /api/v1/users/me`
 
 Requer o cabeçalho `Authorization: Bearer <accessToken>` e retorna os dados públicos do titular do token. A rota é protegida pelo Spring Security Resource Server e valida assinatura, emissor e expiração do JWT.
+
+### Buscar participantes
+
+`GET /api/v1/users?query=ana`
+
+Requer autenticação e retorna até 50 usuários com correspondência por nome de exibição ou e-mail. A resposta contém apenas ID e nome de exibição para permitir seleção de participantes sem expor os e-mails.
+
+### Validar participantes
+
+`POST /api/v1/users/validate`
+
+Requer autenticação e recebe `{"userIds":["<uuid>"]}`. Retorna `204 No Content` quando todos os IDs existem e `404 Not Found` caso contrário. O chat usa esta operação antes de persistir uma conversa.
 
 ## Testes
 
