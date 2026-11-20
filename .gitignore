@@ -1,0 +1,21 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+target/
+**/target/
+*.class
+
+# Node / frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
