@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  auth-service:
+    name: Auth service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: services/auth-service/pom.xml
+
+      - name: Test
+        working-directory: services/auth-service
+        run: mvn test
+
+  chat-service:
+    name: Chat service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: services/chat-service/pom.xml
+
+      - name: Test
+        working-directory: services/chat-service
+        run: mvn test
+
+  infrastructure:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose
+        env:
+          AUTH_DB_PASSWORD: ci-auth-password
+          CHAT_DB_PASSWORD: ci-chat-password
+          AUTH_JWT_SECRET_BASE64: Y2ktand0LXNlY3JldC1hdC1sZWFzdC0zMi1ieXRlcw==
+        run: docker compose -f infra/compose.yaml config --quiet

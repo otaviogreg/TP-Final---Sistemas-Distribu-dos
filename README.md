@@ -1,5 +1,7 @@
 # TP-Final---Sistemas-Distribu-dos
 
+[![CI](https://github.com/otaviogreg/TP-Final---Sistemas-Distribu-dos/actions/workflows/ci.yml/badge.svg)](https://github.com/otaviogreg/TP-Final---Sistemas-Distribu-dos/actions/workflows/ci.yml)
+
 Implementação de um chat distribuído em tempo real para o Trabalho Prático de Sistemas Distribuídos.
 
 ## Estrutura

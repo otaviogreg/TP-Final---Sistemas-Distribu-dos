@@ -312,6 +312,11 @@ Em cada incremento, manteremos o sistema executável e demonstraremos o comporta
 
 ### Incremento 8 — Entrega e relatório
 
+**Estado atual da implementação**
+
+- GitHub Actions executa, em pull requests e pushes principais, os testes Vitest do frontend, os testes Maven dos dois serviços e a validação do Docker Compose.
+- O pipeline fornece um estado automatizado antes da entrega e evita que alterações inconsistentes sejam combinadas sem validação.
+
 **Atividades do grupo**
 
 - Revisaremos as instruções de execução, a arquitetura, os contratos e a configuração.

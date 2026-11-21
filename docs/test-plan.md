@@ -32,6 +32,10 @@ Requisitos: Maven e Docker com daemon ativo. Sem Docker, Testcontainers ignora e
 
 ## Limites atuais
 
-- Não há ainda script k6 nem evidência de 100 usuários simultâneos e 20 grupos.
+- O script k6 cobre o cenário planejado de 100 usuários simultâneos e 20 grupos, mas ainda depende de Docker/k6 disponíveis para produzir evidência nesta máquina.
 - Redis Pub/Sub não mantém mensagens para consumidores desconectados; o PostgreSQL mantém o histórico para recuperação.
 - O Compose executa PostgreSQL, Redis e Nginx como instâncias únicas; a entrega local demonstra escalabilidade da aplicação, não alta disponibilidade completa das dependências.
+
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` executa o build e os testes do frontend, os testes Maven dos dois serviços Java e a validação sintática do Docker Compose. O job de Compose usa credenciais somente de CI e não publica arquivos `.env`.
