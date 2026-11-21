@@ -286,6 +286,13 @@ Em cada incremento, manteremos o sistema executável e demonstraremos o comporta
 - O histórico permanecerá correto quando distribuirmos conexões entre réplicas.
 - Comprovaremos o balanceamento de WebSockets, além do balanceamento de requisições HTTP.
 
+**Estado atual da implementação**
+
+- O frontend de produção foi empacotado em uma imagem Docker própria e pode ser alcançado pelo mesmo gateway que autenticação, API e WebSocket.
+- Docker Compose inicia o frontend, autenticação e chat com health checks e aguarda esses componentes antes de iniciar o Nginx.
+- Os serviços HTTP incluem o cabeçalho `X-Application-Instance`, permitindo relacionar respostas às réplicas que as processaram.
+- O diretório `load-tests` contém o cenário k6 para autenticação, 100 usuários virtuais, 20 grupos e mensagens pelo protocolo STOMP/WebSocket.
+
 ### Incremento 7 — Teste de carga e comportamento sob falhas
 
 **Atividades do grupo**

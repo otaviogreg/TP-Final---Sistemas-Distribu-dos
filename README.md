@@ -28,3 +28,11 @@ npm --prefix frontend run dev
 ```
 
 Acesse `http://localhost:5173`. Durante o desenvolvimento, o Vite encaminha as chamadas HTTP e WebSocket ao gateway local em `http://localhost:8080`. Para validar o frontend, execute `npm --prefix frontend test` e `npm --prefix frontend run build`.
+
+No ambiente integrado, o Compose também monta a versão de produção da interface. A aplicação ficará disponível em `http://localhost:8080`, com autenticação, API, WebSocket e arquivos estáticos passando pelo Nginx. Os serviços autenticador e chat podem ser escalados para observar instâncias diferentes:
+
+```powershell
+docker compose -f infra/compose.yaml up --build --scale auth-service=2 --scale chat-service=2
+```
+
+As respostas HTTP incluem `X-Application-Instance`, que permite identificar qual réplica processou cada requisição. Auth, chat e frontend têm health checks; o Compose inicia o gateway somente após esses componentes ficarem prontos.
