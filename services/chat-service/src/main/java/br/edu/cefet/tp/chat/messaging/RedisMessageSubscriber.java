@@ -1,6 +1,5 @@
 package br.edu.cefet.tp.chat.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +7,8 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 @Component
 public class RedisMessageSubscriber implements MessageListener {
@@ -33,7 +34,7 @@ public class RedisMessageSubscriber implements MessageListener {
                     "/topic/conversations/" + event.conversationId(),
                     event
             );
-        } catch (JsonProcessingException exception) {
+        } catch (IOException exception) {
             logger.error("Discarding malformed message received from Redis Pub/Sub.", exception);
         }
     }

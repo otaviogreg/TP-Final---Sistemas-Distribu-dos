@@ -38,7 +38,11 @@ function registerOrLogin(index) {
   const registerResponse = http.post(
     `${BASE_URL}/api/v1/auth/register`,
     JSON.stringify({ displayName, email, password: PASSWORD }),
-    { headers: { "Content-Type": "application/json" }, tags: { name: "register" } },
+    {
+      headers: { "Content-Type": "application/json" },
+      tags: { name: "register" },
+      responseCallback: http.expectedStatuses(200, 201, 409),
+    },
   );
 
   if (![200, 201].includes(registerResponse.status)) {
@@ -76,16 +80,18 @@ export function setup() {
 
   const groups = [];
   for (let index = 0; index < GROUP_COUNT; index += 1) {
-    const owner = users[index];
-    const participant = users[(index + 1) % users.length];
-    if (!owner || !participant) continue;
+    const start = Math.floor((index * users.length) / GROUP_COUNT);
+    const end = Math.floor(((index + 1) * users.length) / GROUP_COUNT);
+    const members = users.slice(start, end);
+    const [owner, ...participants] = members;
+    if (!owner) continue;
 
     const response = http.post(
       `${BASE_URL}/api/v1/conversations`,
       JSON.stringify({
         type: "GROUP",
         name: `Carga grupo ${index + 1}`,
-        participantIds: [participant.userId],
+        participantIds: participants.map((participant) => participant.userId),
       }),
       {
         headers: {
@@ -101,7 +107,10 @@ export function setup() {
     });
 
     if (response.status === 201) {
-      groups.push(response.json().id);
+      groups.push({
+        id: response.json().id,
+        memberIds: members.map((member) => member.userId),
+      });
     }
   }
 
@@ -118,8 +127,15 @@ function stompFrame(command, headers = {}, body = "") {
 export default function (data) {
   const userIndex = (__VU - 1) % data.users.length;
   const user = data.users[userIndex];
-  const group = data.groups[userIndex % data.groups.length];
-  if (!user || !group) {
+  if (!user) {
+    websocketErrors.add(1);
+    return;
+  }
+
+  const group = data.groups.find((candidate) =>
+    candidate.memberIds.includes(user.userId),
+  );
+  if (!group) {
     websocketErrors.add(1);
     return;
   }
@@ -143,13 +159,13 @@ export default function (data) {
         if (frame.startsWith("CONNECTED")) {
           socket.send(stompFrame("SUBSCRIBE", {
             id: "subscription-1",
-            destination: `/topic/conversations/${group}`,
+            destination: `/topic/conversations/${group.id}`,
             ack: "auto",
           }));
 
           for (let index = 0; index < MESSAGE_COUNT; index += 1) {
             socket.send(stompFrame("SEND", {
-              destination: `/app/conversations/${group}/messages`,
+              destination: `/app/conversations/${group.id}/messages`,
               "content-type": "application/json",
             }, JSON.stringify({ content: `Carga ${__VU}-${index}-${Date.now()}` })));
           }
@@ -170,7 +186,7 @@ export default function (data) {
   });
 
   const historyResponse = http.get(
-    `${BASE_URL}/api/v1/conversations/${group}/messages?page=0&size=50`,
+    `${BASE_URL}/api/v1/conversations/${group.id}/messages?page=0&size=50`,
     {
       headers: { Authorization: `Bearer ${user.token}` },
       tags: { name: "history" },

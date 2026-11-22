@@ -31,7 +31,7 @@ npm --prefix frontend run dev
 
 Acesse `http://localhost:5173`. Durante o desenvolvimento, o Vite encaminha as chamadas HTTP e WebSocket ao gateway local em `http://localhost:8080`. Para validar o frontend, execute `npm --prefix frontend test` e `npm --prefix frontend run build`.
 
-No ambiente integrado, o Compose também monta a versão de produção da interface. A aplicação ficará disponível em `http://localhost:8080`, com autenticação, API, WebSocket e arquivos estáticos passando pelo Nginx. Os serviços autenticador e chat podem ser escalados para observar instâncias diferentes:
+No ambiente integrado, o Compose também monta a versão de produção da interface. A aplicação ficará disponível em `http://localhost:8080`, com autenticação, API, WebSocket e arquivos estáticos passando pelo Nginx. Se as portas locais padrão do PostgreSQL (`5432` ou `5433`) ou do Redis (`6379`) já estiverem ocupadas, altere `AUTH_DB_HOST_PORT`, `CHAT_DB_HOST_PORT` e `REDIS_HOST_PORT` no `.env`; isso não muda as portas usadas entre os containers. Os serviços autenticador e chat podem ser escalados para observar instâncias diferentes:
 
 ```powershell
 docker compose -f infra/compose.yaml up --build --scale auth-service=2 --scale chat-service=2
