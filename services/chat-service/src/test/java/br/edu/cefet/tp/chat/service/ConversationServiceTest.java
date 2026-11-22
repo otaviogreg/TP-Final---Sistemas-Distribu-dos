@@ -1,7 +1,9 @@
 package br.edu.cefet.tp.chat.service;
 
 import br.edu.cefet.tp.chat.client.AuthServiceClient;
+import br.edu.cefet.tp.chat.dto.AddParticipantsRequest;
 import br.edu.cefet.tp.chat.dto.CreateConversationRequest;
+import br.edu.cefet.tp.chat.exception.ConversationForbiddenException;
 import br.edu.cefet.tp.chat.exception.InvalidConversationException;
 import br.edu.cefet.tp.chat.model.Conversation;
 import br.edu.cefet.tp.chat.model.ConversationType;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,6 +102,102 @@ class ConversationServiceTest {
                 creatorId,
                 "caller-token",
                 new CreateConversationRequest(ConversationType.GROUP, " ", List.of(UUID.randomUUID()))
+        ));
+
+        verify(authServiceClient, never()).validateUsers(any(), any());
+    }
+
+    @Test
+    void addParticipantsValidatesNewMembersAndReturnsUpdatedConversation() {
+        UUID creatorId = UUID.randomUUID();
+        UUID existingMemberId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        UUID firstNewMemberId = UUID.randomUUID();
+        UUID secondNewMemberId = UUID.randomUUID();
+        Conversation conversation = new Conversation(ConversationType.GROUP, "Study group", creatorId);
+        conversation.addParticipant(creatorId);
+        conversation.addParticipant(existingMemberId);
+        when(conversationRepository.findByIdAndParticipants_UserId(conversationId, creatorId))
+                .thenReturn(Optional.of(conversation));
+        when(conversationRepository.findByIdForUpdate(conversationId)).thenReturn(Optional.of(conversation));
+
+        var result = conversationService.addParticipants(
+                conversationId,
+                creatorId,
+                "caller-token",
+                new AddParticipantsRequest(List.of(firstNewMemberId, secondNewMemberId))
+        );
+
+        assertEquals(4, result.participantIds().size());
+        verify(authServiceClient).validateUsers(
+                List.of(firstNewMemberId, secondNewMemberId),
+                "caller-token"
+        );
+        verify(conversationRepository).save(conversation);
+    }
+
+    @Test
+    void addParticipantsRejectsExistingMemberBeforeCallingAuthService() {
+        UUID creatorId = UUID.randomUUID();
+        UUID existingMemberId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        Conversation conversation = new Conversation(ConversationType.GROUP, "Study group", creatorId);
+        conversation.addParticipant(creatorId);
+        conversation.addParticipant(existingMemberId);
+        when(conversationRepository.findByIdAndParticipants_UserId(conversationId, creatorId))
+                .thenReturn(Optional.of(conversation));
+        when(conversationRepository.findByIdForUpdate(conversationId)).thenReturn(Optional.of(conversation));
+
+        assertThrows(InvalidConversationException.class, () -> conversationService.addParticipants(
+                conversationId,
+                creatorId,
+                "caller-token",
+                new AddParticipantsRequest(List.of(existingMemberId))
+        ));
+
+        verify(authServiceClient, never()).validateUsers(any(), any());
+        verify(conversationRepository, never()).save(any(Conversation.class));
+    }
+
+    @Test
+    void addParticipantsRejectsNonCreator() {
+        UUID creatorId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        Conversation conversation = new Conversation(ConversationType.GROUP, "Study group", creatorId);
+        conversation.addParticipant(creatorId);
+        conversation.addParticipant(memberId);
+        when(conversationRepository.findByIdAndParticipants_UserId(conversationId, memberId))
+                .thenReturn(Optional.of(conversation));
+
+        assertThrows(ConversationForbiddenException.class, () -> conversationService.addParticipants(
+                conversationId,
+                memberId,
+                "caller-token",
+                new AddParticipantsRequest(List.of(UUID.randomUUID()))
+        ));
+
+        verify(authServiceClient, never()).validateUsers(any(), any());
+    }
+
+    @Test
+    void addParticipantsRejectsGroupsThatWouldExceedMemberLimit() {
+        UUID creatorId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        Conversation conversation = new Conversation(ConversationType.GROUP, "Study group", creatorId);
+        conversation.addParticipant(creatorId);
+        for (int i = 0; i < 99; i++) {
+            conversation.addParticipant(UUID.randomUUID());
+        }
+        when(conversationRepository.findByIdAndParticipants_UserId(conversationId, creatorId))
+                .thenReturn(Optional.of(conversation));
+        when(conversationRepository.findByIdForUpdate(conversationId)).thenReturn(Optional.of(conversation));
+
+        assertThrows(InvalidConversationException.class, () -> conversationService.addParticipants(
+                conversationId,
+                creatorId,
+                "caller-token",
+                new AddParticipantsRequest(List.of(UUID.randomUUID()))
         ));
 
         verify(authServiceClient, never()).validateUsers(any(), any());

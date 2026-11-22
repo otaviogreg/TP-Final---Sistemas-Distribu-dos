@@ -9,13 +9,13 @@ Implementação de um chat distribuído em tempo real para o Trabalho Prático d
 - `services/auth-service`: cadastro, login, emissão e validação de JWT.
 - `services/chat-service`: criação/listagem de conversas, histórico, envio STOMP/WebSocket e distribuição de eventos via Redis.
 - `frontend`: aplicação React/TypeScript para autenticação, conversas e mensagens em tempo real.
-- `infra`: execução local, banco de dados, Redis e balanceamento (em implementação).
-- `load-tests`: cenários de carga (em implementação).
+- `infra`: execução local com Docker Compose, PostgreSQL, Redis e Nginx.
+- `load-tests`: cenário k6 para usuários concorrentes, grupos e mensagens por WebSocket.
 - `plano-implementacao-chat-distribuido.md`: decisões arquiteturais e plano de execução do grupo.
 
 ## Estado da implementação
 
-O serviço de autenticação implementa cadastro e login, persistência de contas no PostgreSQL, emissão de JWT, consulta do usuário autenticado, validação de entrada e testes unitários. O serviço de chat implementa conversas privadas e em grupo, histórico paginado, autorização por participação, WebSocket/STOMP e propagação de eventos por Redis.
+O serviço de autenticação implementa cadastro e login, persistência de contas no PostgreSQL, emissão de JWT, consulta do usuário autenticado, validação de entrada e testes unitários. O serviço de chat implementa conversas privadas e em grupo, adição de participantes aos grupos pelo criador, histórico paginado, autorização por participação, WebSocket/STOMP e propagação de eventos por Redis.
 
 Consulte [services/auth-service/README.md](services/auth-service/README.md) para configurar e executar o serviço de autenticação.
 Consulte [services/chat-service/README.md](services/chat-service/README.md) para os endpoints do chat, o protocolo WebSocket e a execução integrada.

@@ -1,9 +1,11 @@
 package br.edu.cefet.tp.chat.service;
 
 import br.edu.cefet.tp.chat.dto.ConversationResponse;
+import br.edu.cefet.tp.chat.dto.AddParticipantsRequest;
 import br.edu.cefet.tp.chat.dto.CreateConversationRequest;
 import br.edu.cefet.tp.chat.client.AuthServiceClient;
 import br.edu.cefet.tp.chat.exception.ConversationNotFoundException;
+import br.edu.cefet.tp.chat.exception.ConversationForbiddenException;
 import br.edu.cefet.tp.chat.exception.InvalidConversationException;
 import br.edu.cefet.tp.chat.model.Conversation;
 import br.edu.cefet.tp.chat.model.ConversationType;
@@ -59,6 +61,49 @@ public class ConversationService {
 
         Conversation conversation = new Conversation(request.type(), name, creatorId);
         members.forEach(conversation::addParticipant);
+        return ConversationResponse.from(conversationRepository.save(conversation));
+    }
+
+    @Transactional
+    public ConversationResponse addParticipants(
+            UUID conversationId,
+            UUID requesterId,
+            String accessToken,
+            AddParticipantsRequest request
+    ) {
+        Conversation conversation = conversationRepository
+                .findByIdAndParticipants_UserId(conversationId, requesterId)
+                .orElseThrow(ConversationNotFoundException::new);
+        if (!conversation.getCreatedBy().equals(requesterId)) {
+            throw new ConversationForbiddenException();
+        }
+        conversation = conversationRepository.findByIdForUpdate(conversationId)
+                .orElseThrow(ConversationNotFoundException::new);
+        if (conversation.getType() != ConversationType.GROUP) {
+            throw new InvalidConversationException("Participants can only be added to group conversations.");
+        }
+
+        List<UUID> members = new ArrayList<>(new LinkedHashSet<>(request.participantIds()));
+        if (members.isEmpty()) {
+            throw new InvalidConversationException("At least one participant must be added.");
+        }
+        if (members.size() != request.participantIds().size()) {
+            throw new InvalidConversationException("A participant can only be listed once.");
+        }
+
+        var existingMemberIds = conversation.getParticipants().stream()
+                .map(participant -> participant.getUserId())
+                .toList();
+        if (members.stream().anyMatch(existingMemberIds::contains)) {
+            throw new InvalidConversationException("A participant is already in this conversation.");
+        }
+        if (existingMemberIds.size() + members.size() > 100) {
+            throw new InvalidConversationException("A group cannot have more than 100 participants.");
+        }
+
+        authServiceClient.validateUsers(members, accessToken);
+        members.forEach(conversation::addParticipant);
+        conversation.touch();
         return ConversationResponse.from(conversationRepository.save(conversation));
     }
 

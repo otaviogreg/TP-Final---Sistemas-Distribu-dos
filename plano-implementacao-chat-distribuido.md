@@ -231,7 +231,7 @@ Em cada incremento, manteremos o sistema executável e demonstraremos o comporta
 
 - Implementaremos entidades e migrações de conversas, participantes e mensagens no `chat_db`.
 - Implementaremos criação e listagem de conversas privadas e grupos.
-- Implementaremos inclusão e listagem de participantes segundo as regras definidas.
+- Implementaremos inclusão de participantes pelo criador de grupos e listagem de participantes.
 - Implementaremos gravação e consulta paginada do histórico.
 - Validaremos que remetentes e destinatários pertencem à conversa.
 
@@ -239,6 +239,7 @@ Em cada incremento, manteremos o sistema executável e demonstraremos o comporta
 
 - Mensagens e metadados (grupo, participantes, remetente e data/hora) persistem e são recuperáveis após reiniciar o serviço.
 - Usuários não conseguirão consultar nem publicar em conversas das quais não participam.
+- Somente o criador poderá adicionar pessoas a um grupo; grupos não ultrapassarão 100 participantes.
 
 ### Incremento 4 — Chat em tempo real em uma instância
 

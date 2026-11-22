@@ -35,7 +35,7 @@ describe("NewConversationDialog", () => {
 
     await user.click(screen.getByRole("button", { name: /Grupo/ }));
     await user.type(screen.getByLabelText("Nome do grupo"), "Equipe do projeto");
-    await user.type(screen.getByLabelText(/Adicionar participantes/), "ana");
+    await user.type(screen.getByRole("textbox", { name: "Adicionar participantes" }), "ana");
 
     await screen.findByRole("button", { name: /Ana/ });
     await user.click(screen.getByRole("button", { name: /Ana/ }));
@@ -47,5 +47,35 @@ describe("NewConversationDialog", () => {
       name: "Equipe do projeto",
       participantIds: ["user-2", "user-3"],
     }));
+  });
+
+  it("adiciona participantes a um grupo sem oferecer membros que já estão nele", async () => {
+    const user = userEvent.setup();
+    const onAddParticipants = vi.fn().mockResolvedValue(undefined);
+    mockedSearchUsers.mockResolvedValue([
+      { id: "user-2", displayName: "Ana" },
+      { id: "user-3", displayName: "Bruno" },
+    ]);
+
+    render(
+      <NewConversationDialog
+        mode="addParticipants"
+        token="token"
+        currentUserId="user-1"
+        existingParticipantIds={["user-1", "user-2"]}
+        onClose={vi.fn()}
+        onAddParticipants={onAddParticipants}
+        onUsersFound={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Adicionar participantes" }), "ana");
+
+    expect(await screen.findByRole("button", { name: /Bruno/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Ana/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Bruno/ }));
+    await user.click(screen.getByRole("button", { name: /^Adicionar/ }));
+
+    await waitFor(() => expect(onAddParticipants).toHaveBeenCalledWith(["user-3"]));
   });
 });

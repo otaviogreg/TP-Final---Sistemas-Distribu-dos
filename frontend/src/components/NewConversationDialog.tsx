@@ -7,18 +7,39 @@ interface NewConversationDialogProps {
   token: string;
   currentUserId: string;
   onClose: () => void;
-  onCreate: (request: CreateConversationRequest) => Promise<void>;
   onUsersFound: (users: UserSummary[]) => void;
+  mode?: "create";
+  onCreate: (request: CreateConversationRequest) => Promise<void>;
+  existingParticipantIds?: never;
+  onAddParticipants?: never;
 }
 
+interface AddParticipantsDialogProps {
+  token: string;
+  currentUserId: string;
+  onClose: () => void;
+  onUsersFound: (users: UserSummary[]) => void;
+  mode: "addParticipants";
+  existingParticipantIds: string[];
+  onAddParticipants: (participantIds: string[]) => Promise<void>;
+  onCreate?: never;
+}
+
+type DialogProps = NewConversationDialogProps | AddParticipantsDialogProps;
+
 export function NewConversationDialog({
+  mode,
   token,
   currentUserId,
   onClose,
   onCreate,
   onUsersFound,
-}: NewConversationDialogProps) {
-  const [type, setType] = useState<"PRIVATE" | "GROUP">("PRIVATE");
+  existingParticipantIds,
+  onAddParticipants,
+}: DialogProps) {
+  const isAddingParticipants = mode === "addParticipants";
+  const [selectedType, setSelectedType] = useState<"PRIVATE" | "GROUP">("PRIVATE");
+  const type = isAddingParticipants ? "GROUP" : selectedType;
   const [query, setQuery] = useState("");
   const [groupName, setGroupName] = useState("");
   const [users, setUsers] = useState<UserSummary[]>([]);
@@ -42,7 +63,11 @@ export function NewConversationDialog({
       searchUsers(token, value)
         .then((results) => {
           if (!active) return;
-          const eligibleUsers = results.filter((user) => user.id !== currentUserId);
+          const eligibleUsers = results.filter(
+            (user) =>
+              user.id !== currentUserId &&
+              !existingParticipantIds?.includes(user.id),
+          );
           setUsers(eligibleUsers);
           onUsersFound(eligibleUsers);
         })
@@ -60,7 +85,7 @@ export function NewConversationDialog({
       active = false;
       window.clearTimeout(timer);
     };
-  }, [currentUserId, onUsersFound, query, token]);
+  }, [currentUserId, existingParticipantIds, onUsersFound, query, token]);
 
   function toggleUser(user: UserSummary) {
     setSelectedUsers((current) =>
@@ -75,13 +100,23 @@ export function NewConversationDialog({
     setCreating(true);
     setError(null);
     try {
-      await onCreate({
-        type,
-        ...(type === "GROUP" ? { name: groupName.trim() } : {}),
-        participantIds: selectedUsers.map((user) => user.id),
-      });
+      if (isAddingParticipants) {
+        await onAddParticipants(selectedUsers.map((user) => user.id));
+      } else {
+        await onCreate({
+          type,
+          ...(type === "GROUP" ? { name: groupName.trim() } : {}),
+          participantIds: selectedUsers.map((user) => user.id),
+        });
+      }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível criar a conversa.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : isAddingParticipants
+            ? "Não foi possível adicionar os participantes."
+            : "Não foi possível criar a conversa.",
+      );
       setCreating(false);
     }
   }
@@ -106,33 +141,37 @@ export function NewConversationDialog({
       >
         <div className="dialog-header">
           <div>
-            <span className="eyebrow">COMECE POR AQUI</span>
-            <h2 id="new-conversation-title">Nova conversa</h2>
+            <span className="eyebrow">{isAddingParticipants ? "AMPLIE O GRUPO" : "COMECE POR AQUI"}</span>
+            <h2 id="new-conversation-title">
+              {isAddingParticipants ? "Adicionar participantes" : "Nova conversa"}
+            </h2>
           </div>
           <button className="icon-button close-button" onClick={onClose} aria-label="Fechar">
             ×
           </button>
         </div>
 
-        <div className="conversation-type-switch" role="group" aria-label="Tipo de conversa">
-          <button
-            className={type === "PRIVATE" ? "active" : ""}
-            onClick={() => {
-              setType("PRIVATE");
-              setSelectedUsers((current) => current.slice(0, 1));
-            }}
-          >
-            <span>◉</span> Privada
-          </button>
-          <button
-            className={type === "GROUP" ? "active" : ""}
-            onClick={() => setType("GROUP")}
-          >
-            <span>♧</span> Grupo
-          </button>
-        </div>
+        {!isAddingParticipants && (
+          <div className="conversation-type-switch" role="group" aria-label="Tipo de conversa">
+            <button
+              className={type === "PRIVATE" ? "active" : ""}
+              onClick={() => {
+                setSelectedType("PRIVATE");
+                setSelectedUsers((current) => current.slice(0, 1));
+              }}
+            >
+              <span>◉</span> Privada
+            </button>
+            <button
+              className={type === "GROUP" ? "active" : ""}
+              onClick={() => setSelectedType("GROUP")}
+            >
+              <span>♧</span> Grupo
+            </button>
+          </div>
+        )}
 
-        {type === "GROUP" && (
+        {type === "GROUP" && !isAddingParticipants && (
           <label className="field-label" htmlFor="group-name">
             Nome do grupo
             <input
@@ -207,14 +246,20 @@ export function NewConversationDialog({
 
         <div className="dialog-footer">
           <span className="dialog-hint">
-            {type === "PRIVATE" ? "Uma pessoa por conversa" : "Adicione uma ou mais pessoas"}
+            {isAddingParticipants
+              ? "Os participantes adicionados poderão ver o histórico do grupo."
+              : type === "PRIVATE"
+                ? "Uma pessoa por conversa"
+                : "Adicione uma ou mais pessoas"}
           </span>
           <button
             className="primary-button"
             onClick={() => void submit()}
-            disabled={!canCreate || creating}
+            disabled={!(isAddingParticipants ? selectedUsers.length > 0 : canCreate) || creating}
           >
-            {creating ? "Criando..." : "Criar conversa"}
+            {creating
+              ? isAddingParticipants ? "Adicionando..." : "Criando..."
+              : isAddingParticipants ? "Adicionar" : "Criar conversa"}
             {!creating && <span aria-hidden="true">→</span>}
           </button>
         </div>

@@ -79,6 +79,20 @@ O serviço rejeita IDs repetidos, o próprio ID do usuário na lista, conversa p
 
 Retorna as conversas das quais o usuário autenticado participa, ordenadas pela atividade mais recente. Os dados incluem tipo, nome, criador, participantes e datas de criação/atualização.
 
+### Adicionar participantes a um grupo
+
+`POST /api/v1/conversations/{conversationId}/participants`
+
+Somente o criador de uma conversa do tipo `GROUP` pode adicionar pessoas. O serviço valida os IDs no serviço de autenticação, rejeita participantes já existentes e mantém o limite de 100 pessoas no grupo. Conversas privadas não podem receber participantes adicionais.
+
+```json
+{
+  "participantIds": ["0d1828b5-1e4c-44d0-babc-5af54ec437cf"]
+}
+```
+
+Uma resposta `200 OK` retorna a conversa atualizada com a lista de participantes. Membros comuns recebem `403 Forbidden`; usuários que não participam da conversa recebem `404 Not Found`.
+
 ### Consultar histórico
 
 `GET /api/v1/conversations/{conversationId}/messages?page=0&size=50`

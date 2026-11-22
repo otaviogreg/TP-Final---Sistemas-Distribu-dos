@@ -1,4 +1,5 @@
 import type {
+  AddParticipantsRequest,
   Conversation,
   CreateConversationRequest,
 } from "../types/conversation";
@@ -17,6 +18,21 @@ export function createConversation(
     method: "POST",
     body: JSON.stringify(request),
   });
+}
+
+export function addConversationParticipants(
+  token: string,
+  conversationId: string,
+  request: AddParticipantsRequest,
+): Promise<Conversation> {
+  return requestJson(
+    `/api/v1/conversations/${encodeURIComponent(conversationId)}/participants`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify(request),
+    },
+  );
 }
 
 export function getMessageHistory(

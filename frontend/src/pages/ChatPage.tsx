@@ -5,6 +5,7 @@ import { MessageList } from "../components/MessageList";
 import { NewConversationDialog } from "../components/NewConversationDialog";
 import { useChatSocket } from "../hooks/useChatSocket";
 import {
+  addConversationParticipants,
   createConversation,
   getMessageHistory,
   listConversations,
@@ -32,6 +33,7 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [knownUsers, setKnownUsers] = useState<Record<string, string>>({});
   const [showNewConversation, setShowNewConversation] = useState(false);
+  const [showAddParticipants, setShowAddParticipants] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -155,6 +157,18 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
     ]);
     setSelectedId(conversation.id);
     setShowNewConversation(false);
+    setError(null);
+  }
+
+  async function handleAddParticipants(participantIds: string[]) {
+    if (!selectedConversation) return;
+    const updated = await addConversationParticipants(token, selectedConversation.id, {
+      participantIds,
+    });
+    setConversations((current) =>
+      current.map((conversation) => conversation.id === updated.id ? updated : conversation),
+    );
+    setShowAddParticipants(false);
     setError(null);
   }
 
@@ -286,7 +300,7 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
               <div className="conversation-heading-avatar">
                 {selectedConversation.type === "GROUP" ? "✳" : title.charAt(0).toLocaleUpperCase("pt-BR")}
               </div>
-              <div>
+              <div className="conversation-heading-copy">
                 <h2>{title}</h2>
                 <p>
                   {selectedConversation.type === "GROUP"
@@ -296,6 +310,14 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
                   <span className="heading-status"><span /> {connectionLabel}</span>
                 </p>
               </div>
+              {selectedConversation.type === "GROUP" && selectedConversation.createdBy === user.id && (
+                <button
+                  className="add-participants-button"
+                  onClick={() => setShowAddParticipants(true)}
+                >
+                  Adicionar participantes
+                </button>
+              )}
             </div>
 
             {loadingMessages ? (
@@ -322,6 +344,17 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
           currentUserId={user.id}
           onClose={() => setShowNewConversation(false)}
           onCreate={handleCreateConversation}
+          onUsersFound={handleUsersFound}
+        />
+      )}
+      {showAddParticipants && selectedConversation && (
+        <NewConversationDialog
+          mode="addParticipants"
+          token={token}
+          currentUserId={user.id}
+          existingParticipantIds={selectedConversation.participantIds}
+          onClose={() => setShowAddParticipants(false)}
+          onAddParticipants={handleAddParticipants}
           onUsersFound={handleUsersFound}
         />
       )}

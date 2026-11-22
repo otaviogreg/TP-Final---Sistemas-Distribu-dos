@@ -15,3 +15,7 @@ export interface CreateConversationRequest {
   name?: string;
   participantIds: string[];
 }
+
+export interface AddParticipantsRequest {
+  participantIds: string[];
+}
