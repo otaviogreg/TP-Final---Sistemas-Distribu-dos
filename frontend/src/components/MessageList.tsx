@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../types/message";
+import { LogoMark } from "./Logo";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -50,7 +51,7 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="message-list empty-messages">
-        <div className="empty-chat-mark">✳</div>
+        <div className="empty-chat-mark"><LogoMark size={40} tone="light" /></div>
         <h3>Este é o começo da conversa</h3>
         <p>Envie uma mensagem para iniciar o papo.</p>
       </div>

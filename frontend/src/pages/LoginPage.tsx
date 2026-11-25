@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { login, register } from "../services/authApi";
 import type { UserProfile } from "../types/auth";
+import { Wordmark } from "../components/Logo";
+import { NetworkBackdrop } from "../components/NetworkBackdrop";
 
 interface LoginPageProps {
   onAuthenticated: (token: string, user: UserProfile) => void;
@@ -36,18 +38,16 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
     <main className="auth-page">
       <section className="auth-intro">
         <div className="auth-brand">
-          <span className="brand-mark">c</span>
-          <span>conversa</span>
+          <Wordmark size={38} />
         </div>
         <div className="auth-intro-copy">
           <span className="eyebrow">CONVERSAS QUE APROXIMAM</span>
           <h1>Seu espaço para boas conversas.</h1>
           <p>Mensagens em tempo real, do seu jeito e com quem importa.</p>
         </div>
-        <div className="auth-decoration decoration-one" />
-        <div className="auth-decoration decoration-two" />
+        <NetworkBackdrop />
         <div className="auth-footer-note">
-          <span className="presence-dot" /> Um espaço simples para se conectar
+          <span className="presence-dot" /> Sistema de chat distribuído · CEFET-MG
         </div>
       </section>
 

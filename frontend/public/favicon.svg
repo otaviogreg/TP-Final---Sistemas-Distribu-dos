@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs><linearGradient id="g" x1="8" y1="92" x2="92" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#22e0ee"/></linearGradient></defs>
+  <rect width="100" height="100" rx="24" fill="#0b1230"/>
+  <g transform="translate(10 7) scale(.8)">
+    <path d="M23.7 74.3A40 40 0 1 1 45.1 85.4L18 92Z" fill="none" stroke="url(#g)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M52 16L76 28 M76 28L83 52 M83 52L67 73 M67 73L40 70 M40 70L23 52 M23 52L30 28 M30 28L52 16 M52 45L52 16 M52 45L76 28 M52 45L67 73 M52 45L40 70 M52 45L23 52 M52 45L30 28 M66 50L76 28 M66 50L83 52 M66 50L67 73 M66 50L52 45 M38 46L23 52 M38 46L30 28 M38 46L52 45 M38 46L40 70" fill="none" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+    <circle cx="52" cy="16" r="3.4" fill="#22e0ee"/><circle cx="76" cy="28" r="2.6" fill="#c4b5fd"/><circle cx="83" cy="52" r="3.4" fill="#22e0ee"/><circle cx="67" cy="73" r="2.6" fill="#c4b5fd"/><circle cx="40" cy="70" r="2.6" fill="#c4b5fd"/><circle cx="23" cy="52" r="2.6" fill="#c4b5fd"/><circle cx="30" cy="28" r="2.6" fill="#c4b5fd"/><circle cx="52" cy="45" r="2.6" fill="#c4b5fd"/><circle cx="66" cy="50" r="2.6" fill="#c4b5fd"/><circle cx="38" cy="46" r="2.6" fill="#c4b5fd"/>
+    <circle cx="18" cy="92" r="4" fill="#a78bfa"/>
+  </g>
+</svg>

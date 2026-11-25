@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConversationList, conversationTitle, rememberUsers } from "../components/ConversationList";
+import { LogoMark, Wordmark } from "../components/Logo";
 import { MessageComposer } from "../components/MessageComposer";
 import { MessageList } from "../components/MessageList";
 import { NewConversationDialog } from "../components/NewConversationDialog";
@@ -249,8 +250,7 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
             ☰
           </button>
           <div className="mobile-brand">
-            <span className="brand-mark">c</span>
-            <span>conversa</span>
+            <Wordmark size={30} tone="light" />
           </div>
           <div className="chat-topbar-context">
             <span className="eyebrow">CHAT DISTRIBUÍDO</span>
@@ -283,9 +283,7 @@ export function ChatPage({ token, user, onLogout }: ChatPageProps) {
         ) : !selectedConversation ? (
           <div className="welcome-panel">
             <div className="welcome-illustration">
-              <span className="welcome-bubble bubble-one">Olá!</span>
-              <span className="welcome-bubble bubble-two">✳</span>
-              <span className="welcome-orbit" />
+              <LogoMark size={104} tone="light" className="brand-logo" />
             </div>
             <span className="eyebrow">UM BOM PAPO COMEÇA AQUI</span>
             <h2>As melhores ideias surgem em conversa.</h2>

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { UserProfile, UserSummary } from "../types/auth";
 import type { Conversation } from "../types/conversation";
+import { LogoMark, Wordmark } from "./Logo";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -49,11 +51,20 @@ export function ConversationList({
   onSelect,
   onCreate,
 }: ConversationListProps) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+  const visibleConversations = normalizedQuery
+    ? conversations.filter((conversation) =>
+        conversationTitle(conversation, currentUser.id, knownUsers)
+          .toLocaleLowerCase("pt-BR")
+          .includes(normalizedQuery),
+      )
+    : conversations;
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <span className="brand-mark">c</span>
-        <span>conversa</span>
+        <Wordmark size={34} />
       </div>
 
       <div className="sidebar-heading">
@@ -70,20 +81,35 @@ export function ConversationList({
         <span>＋</span> Nova conversa
       </button>
 
+      <label className="sidebar-search">
+        <span aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar conversa"
+          aria-label="Buscar conversa"
+        />
+      </label>
+
       <div className="conversation-section-title">
         <span>CONVERSAS</span>
-        <span className="conversation-count">{conversations.length}</span>
+        <span className="conversation-count">{visibleConversations.length}</span>
       </div>
 
       <nav className="conversation-list" aria-label="Conversas">
         {conversations.length === 0 ? (
           <div className="sidebar-empty">
-            <span className="empty-icon">✳</span>
+            <span className="empty-icon"><LogoMark size={30} /></span>
             <p>Suas conversas aparecerão aqui.</p>
             <button onClick={onCreate}>Começar uma conversa</button>
           </div>
+        ) : visibleConversations.length === 0 ? (
+          <div className="sidebar-empty">
+            <p>Nenhuma conversa com esse nome.</p>
+          </div>
         ) : (
-          conversations.map((conversation) => {
+          visibleConversations.map((conversation) => {
             const title = conversationTitle(conversation, currentUser.id, knownUsers);
             const isGroup = conversation.type === "GROUP";
             return (
