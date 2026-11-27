@@ -111,7 +111,9 @@ class RedisMessageIntegrationTest {
         String token = tokenFor(creatorId);
 
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.getObjectMapper().findAndRegisterModules();
+        stompClient.setMessageConverter(converter);
         StompHeaders connectHeaders = new StompHeaders();
         connectHeaders.add("Authorization", "Bearer " + token);
         WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
