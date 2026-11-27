@@ -31,7 +31,7 @@ class JwtConfigurationTest {
         String token = jwtService.issueToken(user);
         Jwt decoded = configuration.jwtDecoder(key, "test-auth-service").decode(token);
 
-        assertEquals("test-auth-service", decoded.getIssuer().toString());
+        assertEquals("test-auth-service", decoded.getClaimAsString("iss"));
         assertEquals("1cda8c19-1588-4963-95ac-b93168d3ab9c", decoded.getSubject());
         assertEquals("ana@example.com", decoded.getClaimAsString("email"));
     }
